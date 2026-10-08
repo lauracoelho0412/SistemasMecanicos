@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+venv/
+env/
+.venv/
+ENV/
+
+# Streamlit (segredos e configurações locais não devem ir para o GitHub)
+.streamlit/secrets.toml
+
+# Distribuição / build
+build/
+dist/
+*.egg-info/
+
+# Editores e IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
