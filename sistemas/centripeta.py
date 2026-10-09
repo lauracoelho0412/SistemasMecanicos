@@ -1,5 +1,4 @@
-import time
- 
+
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
@@ -100,6 +99,109 @@ def atualizar_quadro(elementos, R, omega, t):
     elementos["titulo"].set_text(f"t = {t:.2f} s")
  
  
+# Página HTML da animação. Roda inteira no NAVEGADOR (canvas + JavaScript),
+# por isso não depende da velocidade da conexão com o servidor. Os valores R,
+# ω e T são calculados em Python e inseridos nos marcadores __R__, __OMEGA__
+# e __T__; o JavaScript só desenha.
+_HTML_ANIMACAO = """
+<div style="font-family: sans-serif; text-align: center;">
+  <canvas id="c" width="360" height="400"></canvas>
+</div>
+<script>
+  const R = __R__, omega = __OMEGA__, T = __T__;
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  const cx = 180, cy = 190;             // origem (0, 0) no canvas
+  const escala = 165 / (1.4 * R);       // pixels por metro (mesmos limites do gráfico: ±1.4R)
+ 
+  // Converte (x, y) em metros para pixels (o eixo y do canvas cresce para baixo).
+  const px = (x) => cx + x * escala;
+  const py = (y) => cy - y * escala;
+ 
+  function seta(x0, y0, dx, dy, cor) {   // seta em pixels, de (x0, y0) na direção (dx, dy)
+    const c = 0.35 * R * escala;         // comprimento fixo: só indica a direção
+    const x1 = x0 + dx * c, y1 = y0 + dy * c;
+    const ang = Math.atan2(dy, dx);
+    ctx.strokeStyle = cor; ctx.fillStyle = cor; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - 9 * Math.cos(ang - 0.4), y1 - 9 * Math.sin(ang - 0.4));
+    ctx.lineTo(x1 - 9 * Math.cos(ang + 0.4), y1 - 9 * Math.sin(ang + 0.4));
+    ctx.closePath(); ctx.fill();
+  }
+ 
+  function desenhar(t) {
+    ctx.clearRect(0, 0, 360, 400);
+    ctx.strokeStyle = "#999"; ctx.lineWidth = 1;
+    ctx.strokeRect(10, 25, 340, 340);                      // moldura do gráfico
+ 
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = "#ccc";     // trajetória
+    ctx.beginPath(); ctx.arc(cx, cy, R * escala, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+ 
+    // MESMAS equações do MCU usadas em Python (calcular_posicao):
+    // x(t) = R·cos(ωt) e y(t) = R·sen(ωt)
+    const x = R * Math.cos(omega * t), y = R * Math.sin(omega * t);
+    const ux = Math.cos(omega * t), uy = Math.sin(omega * t);  // unitário radial
+ 
+    ctx.strokeStyle = "gray"; ctx.lineWidth = 1.5;         // fio
+    ctx.beginPath(); ctx.moveTo(px(0), py(0)); ctx.lineTo(px(x), py(y)); ctx.stroke();
+ 
+    seta(px(x), py(y), -ux, uy, "crimson");                // Fc: aponta para o centro
+    seta(px(x), py(y), -uy, -ux, "seagreen");              // v: tangente ao círculo
+ 
+    ctx.fillStyle = "steelblue";                           // corpo
+    ctx.beginPath(); ctx.arc(px(x), py(y), 8, 0, 2 * Math.PI); ctx.fill();
+ 
+    ctx.fillStyle = "black"; ctx.font = "14px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("t = " + t.toFixed(2) + " s", cx, 18);
+    ctx.fillStyle = "crimson"; ctx.fillText("— Força centrípeta Fc", 105, 392);
+    ctx.fillStyle = "seagreen"; ctx.fillText("— Velocidade v", 280, 392);
+  }
+ 
+  // Animação em tempo real: a cada quadro, t é o tempo REALMENTE decorrido
+  // (relógio do navegador). Uma volta dura exatamente T segundos.
+  let inicioAnim, idAnim;
+  function passo(agora) {
+    if (inicioAnim === undefined) inicioAnim = agora;
+    const t = Math.min((agora - inicioAnim) / 1000, T);
+    desenhar(t);
+    if (t < T) idAnim = requestAnimationFrame(passo);
+  }
+  function iniciar() {
+    cancelAnimationFrame(idAnim);
+    inicioAnim = undefined;
+    idAnim = requestAnimationFrame(passo);
+  }
+  if (__INICIAR__) {
+    iniciar();
+  } else {
+    desenhar(0);
+  }
+</script>
+"""
+ 
+ 
+def gerar_html_animacao(R, omega, periodo, iniciar=False):
+    """Monta o HTML com os parâmetros e define se a volta deve iniciar."""
+    return (_HTML_ANIMACAO
+            .replace("__R__", repr(float(R)))
+            .replace("__OMEGA__", repr(float(omega)))
+            .replace("__T__", repr(float(periodo)))
+            .replace("__INICIAR__", "true" if iniciar else "false"))
+
+
+def exibir_html(html, altura):
+    """Mostra uma página HTML dentro do app. Usa st.iframe (versões novas do
+    Streamlit) e, se não existir, o antigo components.html."""
+    if hasattr(st, "iframe"):
+        st.iframe(html, height=altura)
+    else:
+        import streamlit.components.v1 as components
+        components.html(html, height=altura)
+ 
+ 
 def renderizar():
     """Tela do sistema: controles | gráfico | valores calculados."""
     st.subheader("Força Centrípeta — Movimento Circular Uniforme")
@@ -114,18 +216,15 @@ def renderizar():
         R = st.slider("Raio R (m)", 0.5, 10.0, 3.0, 0.1)
         v = st.slider("Velocidade tangencial v (m/s)", 0.5, 20.0, 5.0, 0.1)
         m = st.slider("Massa m (kg)", 0.1, 10.0, 1.0, 0.1)
-        fracao = st.slider("Posição na volta (0 = início, 1 = volta completa)",
-                           0.0, 1.0, 0.0, 0.01)
-        animar = st.button("▶ Animar uma volta")
- 
+        iniciar_volta = st.button("▶ Iniciar volta")
+
     omega, periodo, a_c, f_c = calcular_grandezas(R, v, m)
-    t = fracao * periodo
- 
+
     with col_grafico:
-        area_grafico = st.empty()
-        fig, elementos = criar_figura(R, omega, periodo)
-        atualizar_quadro(elementos, R, omega, t)
-        area_grafico.pyplot(fig)
+        # Alterar qualquer slider faz o Streamlit reconstruir este HTML com os
+        # parâmetros atualizados
+        # A animação só começa quando o usuário clica no botão.
+        exibir_html(gerar_html_animacao(R, omega, periodo, iniciar=iniciar_volta), 440)
  
     # Grandezas calculadas, atualizadas a cada mudança nos sliders.
     with col_valores:
@@ -139,20 +238,4 @@ def renderizar():
         st.latex(r"x(t) = R\cos(\omega t) \qquad y(t) = R\sin(\omega t)")
         st.latex(r"F_c = \frac{m v^2}{R} = m \omega^2 R")
         st.latex(r"T = \frac{2\pi}{\omega}")
- 
-    # A animação fica por último, pois bloqueia o script enquanto roda.
-    # Ela acompanha o relógio real: a cada quadro, o instante t desenhado é o
-    # tempo realmente decorrido desde o clique. Uma volta leva exatamente T
-    # segundos; se a tela demorar a redesenhar, os quadros são pulados, mas a
-    # posição continua correta para aquele instante.
-    if animar:
-        inicio = time.perf_counter()
-        while True:
-            decorrido = time.perf_counter() - inicio
-            atualizar_quadro(elementos, R, omega, min(decorrido, periodo))
-            area_grafico.pyplot(fig)
-            if decorrido >= periodo:
-                break
- 
-    plt.close(fig)
  

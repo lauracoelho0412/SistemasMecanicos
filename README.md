@@ -4,7 +4,7 @@ Atividade ADO 2 de Física (Mecânica e Física Moderna) — aplicação web em
 Python que simula sistemas clássicos da Mecânica a partir da Segunda Lei de
 Newton, usando apenas fórmulas fechadas (sem integração numérica).
 
-🔗 **Link da aplicação:** _(colar aqui o link do Streamlit Cloud depois de publicar)_
+🔗 **Link da aplicação:**[ Sistemas Mecânicos](https://sistemasmecanicos-zm9uskbdgcwvvc449bswdg.streamlit.app/)
 
 ## Sistemas
 
@@ -46,19 +46,6 @@ Se o `pip` não estiver disponível na sua instalação do Python:
 ```bash
 python -m ensurepip --upgrade
 ```
-
-## Como publicar (link clicável)
-
-1. Suba este projeto para um repositório no GitHub, com o `app.py` e o
-   `requirements.txt` na raiz.
-2. Acesse [share.streamlit.io](https://share.streamlit.io) e entre com a conta
-   do GitHub.
-3. Clique em **Create app**, escolha o repositório e a branch, e informe
-   `app.py` como arquivo principal.
-4. Clique em **Deploy** e copie o link gerado para o topo deste README.
-
-Observação: apps gratuitos entram em "repouso" depois de um tempo sem uso, e o
-primeiro acesso pode levar alguns segundos para reativá-lo.
 
 ## Estrutura do projeto
 
