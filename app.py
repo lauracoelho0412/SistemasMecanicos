@@ -5,13 +5,12 @@ Simulador de Leis de Newton — ADO 2 (Mecânica e Física Moderna)
 
 import streamlit as st
 
-from sistemas import arrasto, centripeta, plano_inclinado
+from sistemas import arrasto, centripeta
 
 st.set_page_config(page_title="Leis de Newton", page_icon="🧪", layout="wide")
 
 # Cada sistema: chave -> (texto do botão, módulo com a função renderizar()).
 SISTEMAS = {
-    "plano": ("Plano inclinado", plano_inclinado),
     "centripeta": ("Força centrípeta", centripeta),
     "arrasto": ("Força de arrasto", arrasto),
 }
