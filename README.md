@@ -7,8 +7,6 @@ Newton, usando apenas fórmulas fechadas (sem integração numérica).
 🔗 **Link da aplicação:**[ Sistemas Mecânicos](https://sistemasmecanicos-zm9uskbdgcwvvc449bswdg.streamlit.app/)
 
 ## Sistemas
-
-- Plano Inclinado com Atrito e Tração
 - Força Centrípeta
 - Força de Arrasto
 
@@ -66,7 +64,6 @@ python -m ensurepip --upgrade
 ├── requirements.txt            # dependências
 └── sistemas/
     ├── centripeta.py          
-    ├── plano_inclinado.py      
     └── arrasto.py              
 ```
 
