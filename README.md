@@ -27,6 +27,18 @@ tangencial constante (movimento circular uniforme).
 Equações: `ω = v/R`, `x(t) = R·cos(ωt)`, `y(t) = R·sen(ωt)`,
 `Fc = m·v²/R = m·ω²·R`.
 
+### Força de arrasto
+
+Um objeto de massa m cai verticalmente sob a ação da gravidade e de uma força de arrasto que se
+opõe ao movimento.
+
+
+Equações:
+
+Arrasto linear: `Farrasto = −bv`, `Vterminal = mg/b`, `τ = m/b`, `v(t) = vterminal(1 − e^(−t/τ))`, `y(t) = VterminalT−Vterminalτ(1 − e(−t/τ))`.
+
+Arrasto quadrático: `Farrasto = -cv|v|`, `Vterminal = √(mg/b)`, `v(t) = Vterminaltanh(gt/Vterminal)`, `y(t) = (V²terminal/g)ln(cosh(gt/Vterminal))`.
+
 ## Requisitos
 
 - Python 3.10+
